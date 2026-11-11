@@ -42,12 +42,14 @@ jobs:
       - name: Install ffmpeg (Linux)
         if: runner.os == 'Linux'
         timeout-minutes: 8
-        env:
-          DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo rm -f /var/lib/man-db/auto-update   # skip the slow man-db trigger
-          sudo apt-get update -q
-          sudo apt-get install -y -q --no-install-recommends ffmpeg
+          # Static build from BtbN/FFmpeg-Builds (hosted on GitHub, includes libass); avoids slow apt mirrors.
+          curl -fsSL --retry 3 -o ffmpeg.tar.xz \
+            https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
+          mkdir -p "$RUNNER_TEMP/ffmpeg"
+          tar -xJf ffmpeg.tar.xz -C "$RUNNER_TEMP/ffmpeg" --strip-components=1
+          rm ffmpeg.tar.xz
+          echo "$RUNNER_TEMP/ffmpeg/bin" >> "$GITHUB_PATH"
       - name: Install ffmpeg (Windows)
         if: runner.os == 'Windows'
         timeout-minutes: 8
