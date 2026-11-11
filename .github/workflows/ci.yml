@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: pip install ruff
@@ -35,13 +35,16 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python: ["3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
-      - name: Install ffmpeg (Linux, Windows)
-        if: runner.os != 'macOS'
-        uses: FedericoCarboni/setup-ffmpeg@v3
+      - name: Install ffmpeg (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends ffmpeg
+      - name: Install ffmpeg (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg -y --no-progress
       - name: Install ffmpeg (macOS)
         if: runner.os == 'macOS'
         run: brew install ffmpeg
@@ -56,7 +59,7 @@ jobs:
         run: |
           ffmpeg -y -loglevel error -f lavfi -i "sine=f=220:d=5" rec.wav
           ehky init demo --template tutorial
-          if ffmpeg -hide_banner -filters | grep -qE "^ [A-Z.]{3} ass "; then
+          if python -c "import sys; from ehky.compose import has_libass; sys.exit(0 if has_libass('ffmpeg') else 1)"; then
             ehky make demo --audio rec.wav
           else
             echo "This ffmpeg has no libass: ehky must refuse subtitles cleanly, then render without them."
