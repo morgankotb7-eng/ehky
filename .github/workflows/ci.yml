@@ -41,12 +41,20 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install ffmpeg (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends ffmpeg
+        timeout-minutes: 8
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo rm -f /var/lib/man-db/auto-update   # skip the slow man-db trigger
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends ffmpeg
       - name: Install ffmpeg (Windows)
         if: runner.os == 'Windows'
+        timeout-minutes: 8
         run: choco install ffmpeg -y --no-progress
       - name: Install ffmpeg (macOS)
         if: runner.os == 'macOS'
+        timeout-minutes: 8
         run: brew install ffmpeg
       - name: Install ehky
         run: pip install .
