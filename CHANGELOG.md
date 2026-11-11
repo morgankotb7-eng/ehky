@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0 (2026-11-11)
 
 First release.
 
@@ -12,3 +12,5 @@ First release.
 - Animated backgrounds (`charcoal`, `sand`, `forest`, `ember`) and crossfades between media.
 - Early validation of every input, `--dry-run`, `--force`, `--timeout`, `ehky doctor`.
 - Edge voice retries on dropped requests; proxy support with certificate checks kept on.
+- Clear early error when ffmpeg was built without libass (e.g. Homebrew on macOS).
+- CI on Linux, Windows and macOS with Python 3.11 to 3.13, rendering a real video each run.
