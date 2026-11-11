@@ -28,6 +28,9 @@ ehky = "ehky.cli:main"
 [tool.setuptools]
 packages = ["ehky"]
 
+[tool.setuptools.package-data]
+ehky = ["ui.html"]
+
 [tool.setuptools.dynamic]
 version = { attr = "ehky.__version__" }
 

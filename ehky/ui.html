@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ar-EG" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ehky · احكي</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --line: #2a313b; --text: #e6edf3; --dim: #8b949e;
+    --green: #3fb950; --yellow: #f5c845; --red: #f85149;
+    --font: "Segoe UI", "Noto Sans Arabic", "Noto Naskh Arabic", Tahoma, "Geeza Pro", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.7 var(--font); }
+  main { max-inline-size: 880px; margin-inline: auto; padding: 32px 20px 64px; }
+  header { display: flex; align-items: baseline; gap: 14px; margin-block-end: 6px; }
+  h1 { margin: 0; font-size: 34px; }
+  h1 bdi { color: var(--green); }
+  .tag { color: var(--dim); margin: 0 0 28px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-block-end: 16px; }
+  h2 { font-size: 17px; margin: 0 0 12px; }
+  label { display: block; color: var(--dim); font-size: 14px; margin-block-end: 6px; }
+  textarea, select, input[type=file] {
+    inline-size: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 10px 12px; font: inherit;
+  }
+  textarea { min-block-size: 190px; resize: vertical; line-height: 1.9; }
+  textarea:focus, select:focus, input:focus, button:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+  .hint { color: var(--dim); font-size: 13px; margin: 8px 0 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row input[type=checkbox] { inline-size: 18px; block-size: 18px; accent-color: var(--green); }
+  input[type=range] { inline-size: 100%; accent-color: var(--green); }
+  button {
+    background: var(--green); color: #04130a; border: 0; border-radius: 10px; padding: 14px 28px;
+    font: 700 17px var(--font); cursor: pointer;
+  }
+  button:disabled { opacity: .55; cursor: wait; }
+  .link { background: none; color: var(--green); padding: 0; font-weight: 400; font-size: 14px; }
+  #status { white-space: pre-wrap; direction: ltr; text-align: left; font: 13px/1.6 ui-monospace, Consolas, monospace; color: var(--dim); margin: 0; }
+  #error { color: var(--red); margin: 12px 0 0; }
+  #result video { inline-size: 100%; max-block-size: 70vh; background: #000; border-radius: 10px; }
+  #result a { color: var(--green); }
+  .hidden { display: none; }
+  .warn { color: var(--yellow); }
+  footer { color: var(--dim); font-size: 13px; text-align: center; margin-block-start: 24px; }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>ehky <bdi>احكي</bdi></h1></header>
+  <p class="tag">اكتب الكلام، وهي تعمله فيديو قصير بصوت مصري. كله على جهازك، ببلاش.</p>
+
+  <section>
+    <h2>الكلام</h2>
+    <label for="script">كل سطر بيتقري بنفَس واحد، فحط الجمل اللي مع بعض في نفس السطر.</label>
+    <textarea id="script" dir="auto" maxlength="5000"></textarea>
+    <p class="hint"><span id="count">0</span> / 5000 حرف · <button type="button" class="link" id="example">حط مثال</button></p>
+  </section>
+
+  <section>
+    <h2>الصوت والشكل</h2>
+    <div class="grid">
+      <div>
+        <label for="voice">الصوت</label>
+        <select id="voice"></select>
+        <p class="hint warn hidden" id="voiceNote">الصوت المصري المحلي (VoiceTut) مش متسطّب، فهتشتغل الأصوات الأونلاين. خطوات التسطيب في الـ README.</p>
+      </div>
+      <div>
+        <label for="aspect">المقاس</label>
+        <select id="aspect">
+          <option value="9:16">طولي 9:16 · Reels</option>
+          <option value="16:9">عرضي 16:9 · YouTube</option>
+          <option value="1:1">مربع 1:1 · Instagram</option>
+        </select>
+      </div>
+      <div>
+        <label for="theme">الخلفية (لو مفيش صور)</label>
+        <select id="theme">
+          <option value="charcoal">رمادي غامق</option>
+          <option value="sand">بيج فاتح</option>
+          <option value="forest">أخضر غامق</option>
+          <option value="ember">بني دافي</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-block-start:16px">
+      <input type="checkbox" id="subtitles">
+      <label for="subtitles" style="margin:0;color:var(--text)">subtitles بالعربي، والكلمة اللي بتتقال بتنوّر</label>
+    </div>
+    <p class="hint warn hidden" id="subsNote">الـ ffmpeg اللي عندك مش بيرسم subtitles (مفيهوش libass). الفيديو هيطلع من غيرها.</p>
+  </section>
+
+  <section>
+    <h2>صور ومزيكا (اختياري)</h2>
+    <div class="grid">
+      <div>
+        <label for="media">صور أو كليبات (بترتيب أسمائها)</label>
+        <input type="file" id="media" multiple accept=".png,.jpg,.jpeg,.webp,.mp4,.mov,.mkv,.webm">
+      </div>
+      <div>
+        <label for="music">مزيكا خلفية (بتوطى لوحدها وقت الكلام)</label>
+        <input type="file" id="music" accept=".mp3,.wav,.m4a,.ogg,.flac">
+        <label for="volume" style="margin-block-start:10px">علو المزيكا: <bdi id="volumeVal">30%</bdi></label>
+        <input type="range" id="volume" min="0" max="100" value="30">
+      </div>
+    </div>
+  </section>
+
+  <button id="go">اعمل الفيديو</button>
+  <p id="error" role="alert"></p>
+
+  <section id="progress" class="hidden" aria-live="polite">
+    <h2 id="progressTitle">شغالين...</h2>
+    <pre id="status"></pre>
+  </section>
+
+  <section id="result" class="hidden">
+    <h2>الفيديو جاهز</h2>
+    <video id="video" controls playsinline></video>
+    <p><a id="download" download>نزّل الفيديو (mp4)</a></p>
+  </section>
+
+  <footer>ehky <bdi id="ver"></bdi> · open source (MIT)</footer>
+</main>
+
+<script>
+(() => {
+  const token = new URLSearchParams(location.search).get("t") || "";
+  const $ = (id) => document.getElementById(id);
+  const api = (path, opts = {}) =>
+    fetch(path, { ...opts, headers: { ...(opts.headers || {}), "X-Ehky-Token": token } });
+  let templates = {};
+
+  function option(value, text) {
+    const o = document.createElement("option");
+    o.value = value; o.textContent = text;
+    return o;
+  }
+
+  async function loadInfo() {
+    const res = await api("/api/info");
+    if (!res.ok) { $("error").textContent = "افتح الصفحة من اللينك اللي ظهر في الـ terminal."; return; }
+    const info = await res.json();
+    templates = info.templates || {};
+    $("ver").textContent = info.version;
+    const voice = $("voice");
+    if (info.voicetut) {
+      const g = document.createElement("optgroup");
+      g.label = "صوت مصري على جهازك (VoiceTut)";
+      for (const name of [...info.speakers.male, ...info.speakers.female]) g.append(option("voicetut:" + name, name));
+      voice.append(g);
+      voice.value = "voicetut:" + info.default_speaker;
+    } else {
+      $("voiceNote").classList.remove("hidden");
+    }
+    const e = document.createElement("optgroup");
+    e.label = "أصوات أونلاين ببلاش (Edge)";
+    const edgeNames = {
+      "ar-EG-ShakirNeural": "شاكر · مصري",
+      "ar-EG-SalmaNeural": "سلمى · مصرية",
+      "ar-SA-HamedNeural": "حامد · سعودي",
+      "ar-SA-ZariyahNeural": "زارية · سعودية",
+    };
+    for (const name of Object.keys(info.edge_voices)) e.append(option("edge:" + name, edgeNames[name] || name));
+    voice.append(e);
+    if (!info.subtitles) { $("subtitles").disabled = true; $("subsNote").classList.remove("hidden"); }
+    if (!info.ffmpeg) $("error").textContent = "ffmpeg مش متسطّب. سطّبه الأول وشغّل ehky doctor.";
+  }
+
+  const updateCount = () => { $("count").textContent = $("script").value.length; };
+  $("script").addEventListener("input", updateCount);
+  $("example").addEventListener("click", () => { $("script").value = templates.fact || ""; updateCount(); });
+  $("volume").addEventListener("input", () => { $("volumeVal").textContent = $("volume").value + "%"; });
+
+  const readFile = (file) => new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve({ name: file.name, data: String(r.result).split(",")[1] || "" });
+    r.onerror = () => reject(new Error("مقدرتش أقرا الملف " + file.name));
+    r.readAsDataURL(file);
+  });
+
+  async function poll() {
+    const res = await api("/api/job");
+    const job = await res.json();
+    $("status").textContent = (job.log || []).join("\n");
+    if (job.state === "running") { setTimeout(poll, 1500); return; }
+    $("go").disabled = false;
+    if (job.state === "done") {
+      $("progressTitle").textContent = "خلصنا";
+      const url = "/api/video?t=" + encodeURIComponent(token) + "&id=" + job.id;
+      $("video").src = url; $("download").href = url;
+      $("download").setAttribute("download", "ehky-" + job.id + ".mp4");
+      $("result").classList.remove("hidden");
+    } else if (job.state === "error") {
+      $("progressTitle").textContent = "حصلت مشكلة";
+      $("error").textContent = job.error;
+    }
+  }
+
+  $("go").addEventListener("click", async () => {
+    $("error").textContent = "";
+    $("result").classList.add("hidden");
+    const script = $("script").value.trim();
+    if (!script) { $("error").textContent = "اكتب الكلام الأول."; $("script").focus(); return; }
+    $("go").disabled = true;
+    try {
+      const [engine, name] = $("voice").value.split(":");
+      const media = await Promise.all([...$("media").files].map(readFile));
+      const musicFile = $("music").files[0];
+      const payload = {
+        script, engine, aspect: $("aspect").value, theme: $("theme").value,
+        subtitles: $("subtitles").checked && !$("subtitles").disabled,
+        music_volume: Number($("volume").value) / 100, media,
+        music: musicFile ? await readFile(musicFile) : null,
+      };
+      if (engine === "voicetut") payload.speaker = name; else payload.voice = name;
+      const res = await api("/api/make", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "حصلت مشكلة");
+      $("progressTitle").textContent = "شغالين... (الصوت المصري المحلي بياخد كام دقيقة)";
+      $("progress").classList.remove("hidden");
+      poll();
+    } catch (err) {
+      $("error").textContent = err.message;
+      $("go").disabled = false;
+    }
+  });
+
+  loadInfo();
+})();
+</script>
+</body>
+</html>

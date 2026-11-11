@@ -130,7 +130,7 @@ class ComposeTests(unittest.TestCase):
         self.assertIn("-loop 1", joined)
         self.assertIn("-stream_loop -1", joined)
         self.assertIn("xfade=transition=fade", joined)
-        self.assertIn("-map 2:a", joined)
+        self.assertIn("[2:a]aresample=48000", joined)
         self.assertTrue(joined.endswith("o.mp4"))
 
     def test_single_media_and_no_subtitles(self):
@@ -146,7 +146,21 @@ class ComposeTests(unittest.TestCase):
         joined = " ".join(argv)
         self.assertIn("s=1920x1080:c0=0xf3ece0", joined)
         self.assertIn("ass=filename='s.ass':fontsdir='/f'", joined)
-        self.assertIn("-map 1:a", joined)
+        self.assertIn("[1:a]aresample=48000", joined)
+
+    def test_music_is_looped_and_ducked_under_the_voice(self):
+        argv = compose.build_ffmpeg_args(
+            [], Path("v.mp3"), None, Path("o.mp4"), 8.0, "9:16", music=Path("m.mp3"), music_volume=0.4
+        )
+        joined = " ".join(argv)
+        self.assertIn("-i v.mp3 -stream_loop -1 -i m.mp3", joined)
+        self.assertIn("[2:a]aresample=48000,volume=0.40", joined)
+        self.assertIn("[bgm][key]sidechaincompress", joined)
+        self.assertIn("-map [aout]", joined)
+
+    def test_no_music_means_voice_only(self):
+        argv = compose.build_ffmpeg_args([], Path("v.mp3"), None, Path("o.mp4"), 8.0, "9:16")
+        self.assertNotIn("sidechaincompress", " ".join(argv))
 
     def test_windows_path_escaping(self):
         self.assertEqual(compose._esc_filter_path(Path("C:/x/it's.ass")), "C\\:/x/it\\'s.ass")
@@ -188,7 +202,7 @@ class ProjectTests(unittest.TestCase):
                 project.create(Path(tmp) / "new", "nope")
 
     def test_settings_reject_unknown_key_and_wrong_type(self):
-        for content in ['aspct = "9:16"', "subtitles = 1", "not toml ["]:
+        for content in ['aspct = "9:16"', "subtitles = 1", "music_volume = true", "not toml ["]:
             with tempfile.TemporaryDirectory() as tmp:
                 (Path(tmp) / "ehky.toml").write_text(content, encoding="utf-8")
                 with self.assertRaises(ValueError):
@@ -240,6 +254,24 @@ class CliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, mock.patch("ehky.compose.has_libass", return_value=False):
             self.assertEqual(quiet(["make", self.script(tmp), "--dry-run", "--subtitles"]), 2)
             self.assertEqual(quiet(["make", self.script(tmp), "--dry-run", "--no-subtitles"]), 0)
+
+    def test_music_must_be_audio_and_volume_in_range(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            s = self.script(tmp)
+            self.assertEqual(quiet(["make", s, "--dry-run", "--music", s]), 2)
+            self.assertEqual(quiet(["make", s, "--dry-run", "--music", str(Path(tmp) / "no.mp3")]), 2)
+            self.assertEqual(quiet(["make", s, "--dry-run", "--music-volume", "1.5"]), 2)
+
+    def test_project_music_setting_is_resolved_relative_to_project(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp) / "p"
+            project.create(folder, "fact")
+            (folder / "song.mp3").write_bytes(b"x")
+            toml = folder / "ehky.toml"
+            toml.write_text(toml.read_text(encoding="utf-8").replace('music = ""', 'music = "song.mp3"'), "utf-8")
+            self.assertEqual(quiet(["make", str(folder), "--dry-run", "--no-subtitles"]), 0)
+            (folder / "song.mp3").unlink()
+            self.assertEqual(quiet(["make", str(folder), "--dry-run", "--no-subtitles"]), 2)
 
     def test_voices(self):
         self.assertEqual(quiet(["voices"]), 0)

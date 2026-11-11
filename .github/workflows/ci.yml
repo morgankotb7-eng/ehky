@@ -68,12 +68,13 @@ jobs:
         shell: bash
         run: |
           ffmpeg -y -loglevel error -f lavfi -i "sine=f=220:d=5" rec.wav
+          ffmpeg -y -loglevel error -f lavfi -i "sine=f=880:d=2" music.wav
           ehky init demo --template tutorial
           if python -c "import sys; from ehky.compose import has_libass; sys.exit(0 if has_libass('ffmpeg') else 1)"; then
-            ehky make demo --audio rec.wav
+            ehky make demo --audio rec.wav --music music.wav
           else
             echo "This ffmpeg has no libass: ehky must refuse subtitles cleanly, then render without them."
             if ehky make demo --audio rec.wav; then exit 1; fi
-            ehky make demo --audio rec.wav --no-subtitles
+            ehky make demo --audio rec.wav --music music.wav --no-subtitles
           fi
           ffprobe -v error -show_entries format=duration -of csv=p=0 demo/video.mp4

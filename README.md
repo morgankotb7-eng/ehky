@@ -27,7 +27,10 @@ for Arabic first:
 - **Subtitles that read right.** Correct letter shaping and right-to-left word order, with the
   word being spoken highlighted as the voice says it.
 - **Your voice, if you prefer.** Record yourself and pass `--audio`; ehky builds the video around it.
-- **One command.** Script in, `.mp4` out: 9:16 for Reels/TikTok/Shorts, 16:9, or 1:1.
+- **Background music that gets out of the way.** Add a track and it automatically gets quieter
+  while the voice is speaking, then comes back up in the pauses.
+- **One command, or no command.** Script in, `.mp4` out: 9:16 for Reels/TikTok/Shorts, 16:9, or 1:1.
+  Prefer clicking? `ehky ui` opens a simple Arabic page in your browser.
 
 ## Quick start
 
@@ -47,6 +50,18 @@ Edit `my-video/script.txt`: each line is read in one breath, so keep sentences t
 on the same line, and write the way people talk. Drop images or clips into `my-video/media/`, and run `ehky make` again.
 Without media, ehky uses a calm animated background.
 
+## Browser interface
+
+```bash
+ehky ui
+```
+
+Opens a page in your browser where you write the script, pick a voice, size, background and
+subtitles, add images and music, and download the finished video. It runs only on your computer:
+the server listens on `127.0.0.1`, and every request needs a random key that changes each run.
+
+<p align="center"><img src="docs/ui.png" alt="ehky browser interface in Arabic" width="560"></p>
+
 ## Templates
 
 | Template   | Format | Good for |
@@ -65,6 +80,8 @@ speaker = "Tareq"     # VoiceTut voice
 voice = "ar-EG-ShakirNeural"  # Edge voice
 rate = "+0%"          # Edge speaking speed
 subtitles = false
+music = ""            # e.g. "music.mp3" in the project folder
+music_volume = 0.3    # 0 to 1, before ducking
 output = "video.mp4"
 ```
 
@@ -75,6 +92,7 @@ Unknown keys or wrong types fail with a clear message instead of being ignored.
 ```
 ehky init NAME [--template fact|tutorial|ad]
 ehky make SOURCE [options]     # SOURCE is a project folder or a .txt file
+ehky ui [--port 8765]           # browser interface on this computer
 ehky voices                    # list voices
 ehky doctor [--online]         # check the setup
 ```
@@ -82,6 +100,7 @@ ehky doctor [--online]         # check the setup
 | Option | What it does |
 |--------|--------------|
 | `--subtitles` / `--no-subtitles` | Burn in Arabic subtitles with the current word highlighted |
+| `--music FILE`, `--music-volume` | Background music (looped), ducked under the voice |
 | `--audio FILE` | Use your own recording (wav, mp3, m4a, ogg, flac) instead of a model |
 | `--engine auto\|voicetut\|edge` | `auto` uses the Egyptian voice when installed, else Edge |
 | `--speaker NAME` | VoiceTut voice, e.g. `Tareq`, `Yasmin` (see `ehky voices`) |

@@ -17,6 +17,8 @@ DEFAULTS: dict[str, object] = {
     "voice": "ar-EG-ShakirNeural",
     "rate": "+0%",
     "subtitles": False,
+    "music": "",
+    "music_volume": 0.3,
     "output": "video.mp4",
 }
 _TYPES = {k: type(v) for k, v in DEFAULTS.items()}
@@ -71,7 +73,10 @@ def load_settings(folder: Path) -> dict[str, object]:
     for key, value in data.items():
         if key not in DEFAULTS:
             raise ValueError(f"{path}: unknown setting {key!r} (known: {', '.join(DEFAULTS)})")
-        if not isinstance(value, _TYPES[key]):
+        kind = _TYPES[key]
+        accepted = (int, float) if kind is float else kind
+        # bool is a subclass of int, so `music_volume = true` must be rejected explicitly
+        if not isinstance(value, accepted) or (kind is not bool and isinstance(value, bool)):
             raise ValueError(f"{path}: {key} must be {_TYPES[key].__name__}")
         settings[key] = value
     return settings
@@ -80,6 +85,8 @@ def load_settings(folder: Path) -> dict[str, object]:
 def _toml_value(value: object) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
+    if isinstance(value, float):
+        return repr(value)
     return '"' + str(value).replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
@@ -95,7 +102,8 @@ def create(folder: Path, template: str) -> Path:
     (folder / "media").mkdir(parents=True, exist_ok=True)
     (folder / "script.txt").write_text(str(spec["script"]), encoding="utf-8")
     lines = [f"# ehky settings ({template} template). Remove a line to use the default."]
-    lines += [f"{k} = {_toml_value(v)}" for k, v in settings.items()]
+    notes = {"music": '  # e.g. "music.mp3", a file in this folder; it gets quieter while the voice speaks'}
+    lines += [f"{k} = {_toml_value(v)}{notes.get(k, '')}" for k, v in settings.items()]
     (folder / "ehky.toml").write_text("\n".join(lines) + "\n", encoding="utf-8")
     (folder / "media" / "README.txt").write_text(
         "Put your images or video clips here (png, jpg, webp, mp4, mov, mkv, webm).\n"

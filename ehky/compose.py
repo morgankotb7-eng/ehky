@@ -75,6 +75,8 @@ def build_ffmpeg_args(
     theme: str = "charcoal",
     fonts_dir: Path | None = None,
     ffmpeg: str = "ffmpeg",
+    music: Path | None = None,
+    music_volume: float = 0.3,
 ) -> list[str]:
     """Pure function: the complete ffmpeg argv (easy to test, shown with --dry-run)."""
     width, height = ASPECTS[aspect]
@@ -95,6 +97,8 @@ def build_ffmpeg_args(
         audio_index = 1
 
     args += ["-i", str(audio)]
+    if music is not None:
+        args += ["-stream_loop", "-1", "-i", str(music)]
     if ass is not None:
         # Explicit option names: newer ffmpeg builds (e.g. Homebrew on macOS) reject the positional form.
         sub = f"ass=filename='{_esc_filter_path(ass)}'"
@@ -103,15 +107,14 @@ def build_ffmpeg_args(
         filters.append(f"[bg]{sub}[out]")
     else:
         filters.append("[bg]null[out]")
+    filters += _audio_filters(audio_index, music is not None, duration, music_volume)
     args += [
         "-filter_complex",
         ";".join(filters),
         "-map",
         "[out]",
         "-map",
-        f"{audio_index}:a",
-        "-af",
-        f"afade=t=out:st={max(duration - 0.4, 0):.3f}:d=0.4",
+        "[aout]",
         "-t",
         f"{duration:.3f}",
         "-c:v",
@@ -131,6 +134,21 @@ def build_ffmpeg_args(
         str(out),
     ]
     return args
+
+
+def _audio_filters(audio_index: int, with_music: bool, duration: float, music_volume: float) -> list[str]:
+    """Voice, optionally over background music that ducks while someone is speaking."""
+    end = f"afade=t=out:st={max(duration - 0.4, 0):.3f}:d=0.4"
+    if not with_music:
+        return [f"[{audio_index}:a]aresample=48000,{end}[aout]"]
+    fade_out = max(duration - 1.5, 0)
+    return [
+        f"[{audio_index}:a]aresample=48000,asplit=2[voice][key]",
+        f"[{audio_index + 1}:a]aresample=48000,volume={music_volume:.2f},"
+        f"afade=t=in:d=1,afade=t=out:st={fade_out:.3f}:d=1.5[bgm]",
+        "[bgm][key]sidechaincompress=threshold=0.03:ratio=8:attack=15:release=350[duck]",
+        f"[voice][duck]amix=inputs=2:duration=longest:normalize=0,{end}[aout]",
+    ]
 
 
 def probe_duration(path: Path, ffprobe: str = "ffprobe") -> float:
