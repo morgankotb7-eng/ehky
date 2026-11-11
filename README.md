@@ -12,7 +12,7 @@ Free. Runs on your machine. No account, no API key.
 
 [العربي](README.ar.md)
 
-<img src="docs/demo.gif" alt="ehky output: Arabic narration with the spoken word highlighted" width="300">
+<img src="docs/demo.gif" alt="ehky in a terminal: install, init a project, make the video, and the result" width="720">
 
 </div>
 

@@ -7,7 +7,7 @@
 
 [English](README.md)
 
-<p align="center"><img src="docs/demo.gif" alt="فيديو طالع من ehky" width="300"></p>
+<p align="center"><img src="docs/demo.gif" alt="ehky شغالة في الـ terminal" width="720"></p>
 
 ## ليه ehky؟
 
