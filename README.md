@@ -32,6 +32,9 @@ for Arabic first:
 ## Quick start
 
 You need **Python 3.11+** and **ffmpeg** ([download](https://ffmpeg.org/download.html)).
+For subtitles, ffmpeg must include libass; `ehky doctor` tells you. On macOS, Homebrew's default
+`ffmpeg` does not, so use `brew tap homebrew-ffmpeg/ffmpeg && brew install homebrew-ffmpeg/ffmpeg/ffmpeg`
+or a static build that lists libass. Videos without subtitles work with any ffmpeg.
 
 ```bash
 pip install git+https://github.com/morgankotb7-eng/ehky

@@ -23,6 +23,9 @@ subtitles العربي فيها بتبوظ: الحروف بتطلع مفككة،
 ## تبدأ إزاي
 
 محتاج **Python 3.11** أو أحدث، و**ffmpeg** ([من هنا](https://ffmpeg.org/download.html)).
+عشان الـ subtitles، الـ ffmpeg لازم يكون فيه libass، و`ehky doctor` هيقولك. على الماك، الـ ffmpeg
+العادي من Homebrew مش فيه libass، فاستخدم `brew tap homebrew-ffmpeg/ffmpeg` وبعدها
+`brew install homebrew-ffmpeg/ffmpeg/ffmpeg`. الفيديو من غير subtitles بيشتغل مع أي ffmpeg.
 
 </div>
 

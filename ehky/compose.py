@@ -151,6 +151,15 @@ def require_tools() -> tuple[str, str]:
     return ffmpeg, ffprobe
 
 
+def has_libass(ffmpeg: str) -> bool:
+    """True when this ffmpeg build can draw subtitles (some builds, e.g. Homebrew's on macOS, cannot)."""
+    try:
+        result = subprocess.run([ffmpeg, "-hide_banner", "-filters"], capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return any(line.split()[1:2] == ["ass"] for line in result.stdout.splitlines() if line.strip())
+
+
 def run(args: list[str], timeout: int) -> None:
     try:
         subprocess.run(args, check=True, capture_output=True, text=True, timeout=timeout)

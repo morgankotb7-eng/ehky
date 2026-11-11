@@ -236,6 +236,11 @@ class CliTests(unittest.TestCase):
             self.assertEqual(quiet(["make", s, "--dry-run", "--audio", str(Path(tmp) / "no.wav")]), 2)
             self.assertEqual(quiet(["make", s, "--dry-run", "--audio", s]), 2)  # .txt is not audio
 
+    def test_subtitles_refused_cleanly_without_libass(self):
+        with tempfile.TemporaryDirectory() as tmp, mock.patch("ehky.compose.has_libass", return_value=False):
+            self.assertEqual(quiet(["make", self.script(tmp), "--dry-run", "--subtitles"]), 2)
+            self.assertEqual(quiet(["make", self.script(tmp), "--dry-run", "--no-subtitles"]), 0)
+
     def test_voices(self):
         self.assertEqual(quiet(["voices"]), 0)
 

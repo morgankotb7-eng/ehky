@@ -4,22 +4,16 @@ from __future__ import annotations
 
 import platform
 import shutil
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
-from . import __version__, fonts, tts
+from . import __version__, compose, fonts, tts
 
 
 def _line(ok: bool, label: str, detail: str) -> bool:
     print(f"  [{'ok' if ok else '!!'}] {label}: {detail}")
     return ok
-
-
-def _has_libass(ffmpeg: str) -> bool:
-    result = subprocess.run([ffmpeg, "-hide_banner", "-filters"], capture_output=True, text=True, timeout=30)
-    return " ass " in result.stdout
 
 
 def run(online: bool = False) -> int:
@@ -32,7 +26,7 @@ def run(online: bool = False) -> int:
 
     print("optional:")
     if ffmpeg:
-        libass = _has_libass(ffmpeg)
+        libass = compose.has_libass(ffmpeg)
         _line(
             libass,
             "subtitles (libass)",

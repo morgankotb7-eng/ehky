@@ -51,10 +51,16 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: ehky doctor
         run: ehky doctor
-      - name: Render a real video offline (own recording, subtitles on)
+      - name: Render a real video offline (own recording)
         shell: bash
         run: |
           ffmpeg -y -loglevel error -f lavfi -i "sine=f=220:d=5" rec.wav
           ehky init demo --template tutorial
-          ehky make demo --audio rec.wav
+          if ffmpeg -hide_banner -filters | grep -qE "^ [A-Z.]{3} ass "; then
+            ehky make demo --audio rec.wav
+          else
+            echo "This ffmpeg has no libass: ehky must refuse subtitles cleanly, then render without them."
+            if ehky make demo --audio rec.wav; then exit 1; fi
+            ehky make demo --audio rec.wav --no-subtitles
+          fi
           ffprobe -v error -show_entries format=duration -of csv=p=0 demo/video.mp4

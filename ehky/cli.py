@@ -126,6 +126,11 @@ def _plan(args: argparse.Namespace) -> dict:
         raise ValueError(f"--audio must be an existing {'/'.join(sorted(tts.AUDIO_EXT))} file")
     engine = "recording" if audio else tts.resolve_engine(str(settings["engine"]))
     ffmpeg, ffprobe = compose.require_tools()
+    if settings["subtitles"] and not compose.has_libass(ffmpeg):
+        raise ValueError(
+            "your ffmpeg cannot draw subtitles (it was built without libass). "
+            "Use --no-subtitles, or install an ffmpeg with libass (see the README)"
+        )
     return {
         "script": script,
         "lines": text.split_lines(raw_script),
