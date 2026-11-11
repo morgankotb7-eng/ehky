@@ -96,7 +96,8 @@ def build_ffmpeg_args(
 
     args += ["-i", str(audio)]
     if ass is not None:
-        sub = f"ass='{_esc_filter_path(ass)}'"
+        # Explicit option names: newer ffmpeg builds (e.g. Homebrew on macOS) reject the positional form.
+        sub = f"ass=filename='{_esc_filter_path(ass)}'"
         if fonts_dir:
             sub += f":fontsdir='{_esc_filter_path(fonts_dir)}'"
         filters.append(f"[bg]{sub}[out]")

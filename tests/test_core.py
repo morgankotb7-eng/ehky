@@ -145,7 +145,7 @@ class ComposeTests(unittest.TestCase):
         )
         joined = " ".join(argv)
         self.assertIn("s=1920x1080:c0=0xf3ece0", joined)
-        self.assertIn("fontsdir", joined)
+        self.assertIn("ass=filename='s.ass':fontsdir='/f'", joined)
         self.assertIn("-map 1:a", joined)
 
     def test_windows_path_escaping(self):
