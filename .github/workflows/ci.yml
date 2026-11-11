@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check .
+      - run: ruff format --check .
+
+  test:
+    name: test (${{ matrix.os }}, py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: FedericoCarboni/setup-ffmpeg@v3
+      - name: Install ehky
+        run: pip install .
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: ehky doctor
+        run: ehky doctor
+      - name: Render a real video offline (own recording, subtitles on)
+        shell: bash
+        run: |
+          ffmpeg -y -loglevel error -f lavfi -i "sine=f=220:d=5" rec.wav
+          ehky init demo --template tutorial
+          ehky make demo --audio rec.wav
+          ffprobe -v error -show_entries format=duration -of csv=p=0 demo/video.mp4

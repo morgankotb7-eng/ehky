@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ehky"
+dynamic = ["version"]
+description = "Turn Arabic text into a narrated short video with an Egyptian voice. Free, local, no API key."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Mohamed Kotb" }]
+keywords = ["arabic", "egyptian", "text-to-speech", "video", "ffmpeg", "shorts", "reels"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+  "Topic :: Multimedia :: Video",
+  "Natural Language :: Arabic",
+]
+dependencies = ["edge-tts>=7.0,<8"]
+
+[project.optional-dependencies]
+voicetut = ["voicetut-tts>=0.1.1"]
+
+[project.scripts]
+ehky = "ehky.cli:main"
+
+[tool.setuptools]
+packages = ["ehky"]
+
+[tool.setuptools.dynamic]
+version = { attr = "ehky.__version__" }
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
